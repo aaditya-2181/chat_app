@@ -1,9 +1,9 @@
-import 'package:chat_app/models/UserModel.dart';
-import 'package:chat_app/pages/homePage.dart';
-import 'package:chat_app/pages/signUpPage.dart';
+import 'package:chat_app/models/ui_helper.dart';
+import 'package:chat_app/models/user_model.dart';
+import 'package:chat_app/pages/home_page.dart';
+import 'package:chat_app/pages/sign_up_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -25,7 +25,8 @@ class _LoginPageState extends State<LoginPage> {
     String pass = passController.text.trim();
 
     if (email == "" || pass == "") {
-      print("All filds are requird");
+      UIHelper.showAlertDailog(
+          context, "incomplete data", "Please fill all tha data!");
     } else {
       logIn(email, pass);
     }
@@ -34,12 +35,17 @@ class _LoginPageState extends State<LoginPage> {
   // Login function start
 
   void logIn(String email, String pass) async {
+    UIHelper.showLoadingDailog(context, "Loggin.....");
     UserCredential? credential;
     try {
       credential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: pass);
     } on FirebaseAuthException catch (ex) {
-      print(ex.code.toString());
+      // Close the Loading Dailog page
+      Navigator.pop(context);
+
+      // show alert dalilogbox
+      UIHelper.showAlertDailog(context, "An error occuerd", ex.code.toString());
     }
 
     if (credential != null) {
@@ -51,9 +57,11 @@ class _LoginPageState extends State<LoginPage> {
           UserModel.fromMap(userData.data() as Map<String, dynamic>);
 
       // Go to Home Page
-      print("Login success");
-      Navigator.push(context, MaterialPageRoute(builder: (context) {
-        return home(userModel: userModel, firebaseUser: credential!.user!);
+      // print("Login success");
+      if (!mounted) return;
+      Navigator.popUntil(context, (route) => route.isFirst);
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) {
+        return Home(userModel: userModel, firebaseUser: credential!.user!);
       }));
     }
   }
@@ -69,66 +77,66 @@ class _LoginPageState extends State<LoginPage> {
         child: SingleChildScrollView(
           //controller: controller,
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Column(
               children: [
-                Text(
+                const Text(
                   "Chat App",
                   style: TextStyle(
                       color: Colors.blueAccent,
                       fontSize: 40,
                       fontWeight: FontWeight.bold),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 16,
                 ),
                 TextField(
                   controller: emailController,
-                  decoration: InputDecoration(labelText: "email or username"),
+                  decoration:
+                      const InputDecoration(labelText: "email or username"),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 16,
                 ),
                 TextField(
                   controller: passController,
                   obscureText: true,
-                  decoration: InputDecoration(labelText: "password"),
+                  decoration: const InputDecoration(labelText: "password"),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 24,
                 ),
                 CupertinoButton(
                   onPressed: () {
                     checkValue();
                   },
-                  child: Text("Login"),
                   color: Colors.blueAccent,
+                  child: const Text("Login"),
                 )
               ],
             ),
           ),
         ),
       )),
-      bottomNavigationBar: Container(
-          child: Row(
+      bottomNavigationBar: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
+          const Text(
             "You don't have an acount?",
             style: TextStyle(fontSize: 18),
           ),
           CupertinoButton(
-              child: Text(
+              child: const Text(
                 "Sign In",
                 style: TextStyle(fontSize: 18),
               ),
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return SignInPage();
+                  return const SignInPage();
                 }));
               })
         ],
-      )),
+      ),
     );
   }
 }

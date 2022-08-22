@@ -4,11 +4,13 @@ class UserModel {
   String? userName;
   String? email;
   String? profilePic;
+  String? password;
   UserModel({
     this.uid,
     this.userName,
     this.email,
     this.profilePic,
+    this.password,
   });
 
   UserModel.fromMap(Map<String, dynamic> map) {
@@ -16,6 +18,7 @@ class UserModel {
     userName = map["userName"];
     email = map["email"];
     profilePic = map["profilePic"];
+    password = map["password"];
   }
 
   Map<String, dynamic> toMap() {
@@ -24,6 +27,7 @@ class UserModel {
       "userName": userName,
       "email": email,
       "profilePic": profilePic,
+      "password": password,
     };
   }
 }

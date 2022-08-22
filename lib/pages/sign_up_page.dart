@@ -1,5 +1,6 @@
-import 'package:chat_app/models/UserModel.dart';
-import 'package:chat_app/pages/completeProfilePage.dart';
+import 'package:chat_app/models/ui_helper.dart';
+import 'package:chat_app/models/user_model.dart';
+import 'package:chat_app/pages/complete_profile_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -23,9 +24,11 @@ class _SignInPageState extends State<SignInPage> {
     String pass = passController.text.trim();
     String cpass = cPassController.text.trim();
     if (email == "" || pass == "" || cpass == "") {
-      print("All filds are requirds");
+      UIHelper.showAlertDailog(
+          context, "incomplete data", "Please fill all tha data!");
     } else if (pass != cpass) {
-      print("Password dose not match");
+      UIHelper.showAlertDailog(context, "Password incorrect",
+          "The password you enterd do not match");
     } else {
       signUp(email, pass);
     }
@@ -35,26 +38,36 @@ class _SignInPageState extends State<SignInPage> {
 
 // Sign up function starting
   void signUp(String email, String pass) async {
+    // show Loading dailog
+    UIHelper.showLoadingDailog(context, "Creating new account");
+
     UserCredential? credential;
     try {
       credential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: pass);
     } on FirebaseAuthException catch (ex) {
-      print(ex.code.toString());
+      // remove the loading dailog
+      Navigator.pop(context);
+
+      // show the alert dailog
+      UIHelper.showAlertDailog(context, "An error occured", ex.code.toString());
     }
 
     if (credential != null) {
       String uid = credential.user!.uid;
-      UserModel newUser =
-          UserModel(uid: uid, email: email, userName: "", profilePic: "");
+      UserModel newUser = UserModel(
+          uid: uid, email: email, userName: "", profilePic: "", password: pass);
 
+// this line of code is for created new user
       await FirebaseFirestore.instance
           .collection("users")
           .doc(uid)
           .set(newUser.toMap())
           .then((value) {
-        print("The new user created");
-        Navigator.push(context, MaterialPageRoute(builder: (context) {
+        //  print("The new user created");
+        Navigator.popUntil(context, (route) => route.isFirst);
+        Navigator.pushReplacement(context,
+            MaterialPageRoute(builder: (context) {
           return CompleteProfilePage(
               userModel: newUser, firebaseUser: credential!.user!);
         }));
@@ -72,39 +85,41 @@ class _SignInPageState extends State<SignInPage> {
         child: SingleChildScrollView(
           //controller: controller,
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Column(
               children: [
-                Text(
+                const Text(
                   "Chat App",
                   style: TextStyle(
                       color: Colors.blueAccent,
                       fontSize: 40,
                       fontWeight: FontWeight.bold),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 16,
                 ),
                 TextField(
                   controller: emailController,
-                  decoration: InputDecoration(labelText: "email or username"),
+                  decoration:
+                      const InputDecoration(labelText: "email or username"),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 16,
                 ),
                 TextField(
                   controller: passController,
                   obscureText: true,
-                  decoration: InputDecoration(labelText: "password"),
+                  decoration: const InputDecoration(labelText: "password"),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 16,
                 ),
                 TextField(
                   controller: cPassController,
-                  decoration: InputDecoration(labelText: "confirm password"),
+                  decoration:
+                      const InputDecoration(labelText: "confirm password"),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 24,
                 ),
 
@@ -113,8 +128,8 @@ class _SignInPageState extends State<SignInPage> {
                   onPressed: () {
                     checkValue();
                   },
-                  child: Text("Sign In"),
                   color: Colors.blueAccent,
+                  child: const Text("Sign In"),
                 )
                 // Sign In Button is Ending
               ],
@@ -124,16 +139,15 @@ class _SignInPageState extends State<SignInPage> {
       )),
 
       // Navigetion Bar is Starting
-      bottomNavigationBar: Container(
-          child: Row(
+      bottomNavigationBar: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
+          const Text(
             "You already  have an acount?",
             style: TextStyle(fontSize: 18),
           ),
           CupertinoButton(
-              child: Text(
+              child: const Text(
                 "Login",
                 style: TextStyle(fontSize: 18),
               ),
@@ -141,7 +155,7 @@ class _SignInPageState extends State<SignInPage> {
                 Navigator.pop(context);
               })
         ],
-      )),
+      ),
 
       // Navigetion Bar is Ending
     );
